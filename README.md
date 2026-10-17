@@ -1,27 +1,26 @@
 # Guard the Sky
 
-**A retro air-traffic-control typing game about keeping the skies safe *and* green.**
+**A retro air-traffic-control typing game about emissions and air traffic.**
 
 You are the controller on duty at a sustainability-focused airport. Two 737-class
 aircraft are closing on each other in your sector. Read the instruction, type it
-exactly, transmit it — before they collide. Do it 50 times across five shifts,
+exactly, transmit it — before they collide. Do it 10 times per shift, across five shifts,
 spend your credits wisely, and clock out with a climate grade.
 
 One file. No build step. No dependencies beyond Google Fonts. Open
-`guard-the-sky.html` in any modern browser and play.
+`guard-the-sky v3.html` in any modern browser and play.
 
 ---
 
 ## The Point of the Game
 
-Sky Guardian is a **sustainability game disguised as a typing game** — or a typing
-game disguised as a sustainability game. It exists to make one idea tangible:
+Guard the Sky is an **educational game combining airport laws and typing minigames**
 
-> **Every second a controller hesitates is a second an aircraft holds, burns fuel,
+> **Every second a player hesitates is a second an aircraft holds, burns fuel,
 > and emits CO₂.**
 
-The core loop is deliberately simple — read a radio instruction, type it correctly,
-beat the clock — but every design decision is wired to an emissions model:
+It uses a simple core loop — read a radio instruction, type it correctly,
+beat the clock — but the design is tied to an emissions model:
 
 - **Fast, accurate typing saves simulated CO₂.** Response speed converts into
   "avoided holding time," which converts into kilograms of CO₂ not emitted.
@@ -44,12 +43,12 @@ makes you feel the airport getting greener under your hands.
 
 1. **START CONTROL SHIFT** → the game enters a *standby* state.
 2. Optionally **UPGRADE** your control systems (costs `UR 150`, max level 15).
-3. Press **▶ PLAY** to receive the first instruction and start the timer.
-4. **Type the instruction exactly** as shown and press **Enter** (or **TRANSMIT ↗**).
+3. Press ** PLAY** to receive the first instruction and start the timer.
+4. **Type the instruction exactly** as shown and press **Enter** (or **TRANSMIT**).
    - Case does **not** matter.
    - Extra/missing whitespace does **not** matter.
    - Spelling and punctuation **do** matter.
-5. Repeat for **10 rounds** to finish the shift. After shift 5, press **CLOCK OUT ⏻**
+5. Repeat for **10 rounds** to finish the shift. After shift 5, press **CLOCK OUT**
    for your overall report.
 
 **Fail state:** you get **2 warnings per shift**. Each missed deadline is an airprox
