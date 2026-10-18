@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SKY GUARDIAN — Air Traffic Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0614;--panel:#150d26;--panel2:#1e1438;--line:#5a3f9a;
+  --blue:#7ab8ff;--cyan:#8ce0ff;--green:#7ce8d8;--amber:#ffce5c;
+  --red:#ff6b9d;--text:#e4dcf4;--muted:#9080b0;--dark:#04020a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);background-image:linear-gradient(rgba(167,139,250,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(167,139,250,.035) 1px,transparent 1px);background-size:8px 8px;color:var(--text);font-family:'VT323',monospace;font-size:20px;min-height:100vh;image-rendering:pixelated}
+button,input{font:inherit}
+button{cursor:pointer}
+h1,h2,h3{font-family:'Press Start 2P',monospace}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 20px;border-bottom:3px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:12px;min-width:230px}
+.logo{font-size:30px;color:var(--green)}
+.brand h1{font-size:13px;letter-spacing:1px;margin:0;color:var(--green)}
+.brand p{margin:5px 0 0;color:var(--muted);font-size:14px;letter-spacing:1px}
+.hud{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.metric{border-left:2px solid var(--line);padding-left:14px;min-width:88px}
+.metric small{display:block;color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:1px}
+.metric strong{display:block;font-size:20px;margin-top:2px}
+.green{color:var(--green)}.amber{color:var(--amber)}.blue{color:var(--blue)}
+main{max-width:1600px;margin:auto;padding:16px 18px 24px}
+.layout{display:grid;grid-template-columns:minmax(235px,1fr) minmax(330px,1.13fr) minmax(235px,1fr);gap:12px;align-items:stretch}
+.panel{background:var(--panel);border:2px solid var(--line);box-shadow:4px 4px 0 var(--dark);overflow:hidden}
+.panel-head{padding:11px 13px;border-bottom:2px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--panel2)}
+.panel-head h2{font-size:8px;letter-spacing:.5px;margin:0;text-transform:uppercase;color:var(--green)}
+.panel-head .symbol{font-size:16px;color:var(--green);margin-right:6px;font-family:'VT323',monospace}
+.count{background:var(--dark);color:var(--green);padding:2px 7px;border:2px solid var(--line);font-weight:700;font-size:15px}
+.side-stack{display:flex;flex-direction:column;gap:12px}
+.queue{padding:6px 12px 12px}
+.flight{display:grid;grid-template-columns:.8fr 1fr .8fr;gap:6px;padding:9px 2px;border-bottom:1px dashed var(--line);font-size:16px;align-items:center}
+.flight:last-child{border-bottom:0}
+.flight .id{font-weight:800;letter-spacing:.3px;color:var(--green);font-family:'Press Start 2P',monospace;font-size:9px}
+.status{font-size:14px;color:var(--amber);white-space:nowrap}
+.status:before{content:"";display:inline-block;width:6px;height:6px;background:currentColor;margin-right:4px;vertical-align:middle}
+.status.ok{color:var(--green)}.status.warn{color:var(--red)}
+.runways{padding:0 12px 12px}
+.runway{display:flex;justify-content:space-between;gap:6px;padding:8px 10px;margin-top:6px;border:2px solid var(--line);background:var(--dark);font-size:15px}
+.runway span:last-child{color:var(--green);font-weight:700}
+.runway.busy{border-color:var(--amber);background:#241635}
+.runway.busy span:last-child{color:var(--amber)}
+.radar-panel{display:flex;flex-direction:column;align-items:center;padding:12px;position:relative;background:var(--panel)}
+.radar-title{width:100%;display:flex;align-items:center;justify-content:space-between;padding:0 2px 8px}
+.radar-title h2{font-size:8px;letter-spacing:.5px;margin:0;color:var(--green)}
+.radar-title span{font-size:15px;color:var(--green);letter-spacing:1px}
+.radar{width:min(100%,370px);aspect-ratio:1;border-radius:50%;border:3px solid var(--green);position:relative;overflow:hidden;background:#0a0418;box-shadow:inset 0 0 24px rgba(167,139,250,.18),0 0 0 3px var(--dark)}
+.radar:before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-radial-gradient(circle at center,transparent 0 18%,rgba(167,139,250,.22) 18% 18.6%,transparent 18.8% 25%)}
+.radar:after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 82%,rgba(167,139,250,.35) 96%,transparent 100%);animation:sweep 4s linear infinite}
+@keyframes sweep{to{transform:rotate(360deg)}}
+.radar.crash{animation:crashFlash .5s steps(2) 2}
+@keyframes crashFlash{0%,100%{box-shadow:inset 0 0 24px rgba(167,139,250,.18),0 0 0 3px var(--dark)}50%{box-shadow:inset 0 0 60px rgba(255,107,157,.85),0 0 0 3px var(--red)}}
+.cross{position:absolute;background:rgba(167,139,250,.25);z-index:1}
+.cross.x{height:2px;width:100%;top:50%}.cross.y{width:2px;height:100%;left:50%}
+.radar-label{position:absolute;color:var(--green);font-size:11px;font-weight:800;z-index:2;font-family:'Press Start 2P',monospace}
+.north{top:6px;left:calc(50% - 4px)}.east{right:6px;top:calc(50% - 6px)}.south{bottom:6px;left:calc(50% - 4px)}.west{left:6px;top:calc(50% - 6px)}
+.plane{position:absolute;z-index:3;font-size:22px}
+.plane.a{color:var(--red);transform:rotate(90deg)}
+.plane.b{color:var(--blue);transform:rotate(-90deg)}
+.plane-label{position:absolute;z-index:3;font-size:11px;font-weight:800;color:var(--text);white-space:nowrap;font-family:'Press Start 2P',monospace;background:var(--dark);padding:2px 4px;border:1px solid var(--line)}
+.label-a{left:36%;top:30%}.label-b{left:71%;top:58%}
+.collision-ring{position:absolute;z-index:2;width:46px;height:46px;left:50%;top:50%;transform:translate(-50%,-50%);border:2px solid var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--red);font-weight:900;font-family:'Press Start 2P',monospace;font-size:14px;animation:pulse 1.2s steps(2) infinite;background:rgba(255,107,157,.1)}
+.collision-ring.safe{border-color:var(--green);color:var(--green);background:rgba(124,232,216,.1)}
+.collision-ring.crash{border-color:var(--red);color:var(--red);background:rgba(255,107,157,.3);transform:translate(-50%,-50%) scale(1.5);transition:transform .2s;animation:none}
+@keyframes pulse{50%{opacity:.5}}
+.radar-caption{margin:10px 0 2px;color:var(--muted);font-size:14px;text-align:center}
+.command-panel{margin-top:14px;padding:14px;border:2px solid var(--line);background:var(--panel);box-shadow:4px 4px 0 var(--dark)}
+.command-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.command-head h2{font-size:10px;margin:0;letter-spacing:.5px;color:var(--green)}
+.tag{font-size:14px;color:var(--amber);border:2px solid var(--amber);padding:2px 6px;letter-spacing:1px}
+.command-box{border:2px solid var(--line);padding:12px;background:var(--dark)}
+.prompt-label{font-size:14px;color:var(--green);text-transform:uppercase;letter-spacing:1px}
+.prompt{font-size:clamp(18px,2.2vw,24px);line-height:1.4;font-weight:700;margin:6px 0 12px;color:var(--text);user-select:text}
+.prompt .flight-id{color:var(--amber);font-family:'Press Start 2P',monospace;font-size:.65em}
+.type-row{display:flex;gap:8px}
+.type-row input{flex:1;min-width:0;background:var(--bg);color:var(--text);border:2px solid var(--line);padding:10px 12px;outline:none;font-size:20px;text-transform:uppercase}
+.type-row input:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(124,232,216,.25)}
+.type-row input:disabled{opacity:.4}
+.type-row button,.primary{border:2px solid var(--green);background:var(--green);color:var(--dark);font-weight:900;padding:0 16px;font-family:'Press Start 2P',monospace;font-size:9px}
+.type-row button.play{background:var(--amber);border-color:var(--amber)}
+.type-row button:disabled{opacity:.4;cursor:not-allowed}
+.type-row button:active,.primary:active{transform:translate(2px,2px)}
+.progress-wrap{height:8px;background:var(--dark);border:2px solid var(--line);margin-top:10px;overflow:hidden}
+.progress{height:100%;width:100%;background:var(--green);transition:width .15s linear}
+.progress.danger{background:var(--red)}
+.feedback{font-size:16px;min-height:18px;margin-top:8px;color:var(--muted)}
+.feedback.good{color:var(--green)}.feedback.bad{color:var(--red)}
+.bottom-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+.mini-panel{padding:12px 14px}
+.mini-panel h3{margin:0 0 6px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--green)}
+.mini-panel p{margin:0;color:var(--muted);font-size:16px;line-height:1.4}
+.upgrade-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.upgrade-line button{background:var(--dark);border:2px solid var(--amber);color:var(--amber);padding:4px 8px;font-size:12px;font-family:'Press Start 2P',monospace}
+.upgrade-line button:disabled{opacity:.35;cursor:not-allowed}
+.round-dots{display:flex;gap:5px;margin-top:8px}
+.dot{width:10px;height:10px;border:2px solid var(--line);background:var(--dark)}
+.dot.done{background:var(--green);border-color:var(--green)}
+.dot.current{background:var(--amber);border-color:var(--amber)}
+.overlay{position:fixed;inset:0;background:rgba(4,2,10,.94);display:flex;align-items:center;justify-content:center;padding:18px;z-index:20}
+.modal{width:min(590px,100%);max-height:92vh;overflow:auto;background:var(--panel);border:3px solid var(--green);box-shadow:6px 6px 0 var(--dark);padding:clamp(20px,4vw,32px)}
+.eyebrow{color:var(--green);font-size:14px;font-weight:900;letter-spacing:2px;text-transform:uppercase}
+.modal h2{font-size:clamp(18px,3.5vw,26px);margin:10px 0 14px;letter-spacing:1px;color:var(--green);line-height:1.4}
+.modal p{color:var(--muted);line-height:1.5;font-size:18px}
+.modal ul{color:var(--muted);line-height:1.7;padding-left:20px;font-size:17px}
+.modal ul b{color:var(--text)}
+.modal .primary{padding:12px 18px;margin-top:10px;width:100%}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.stat-card{background:var(--dark);border:2px solid var(--line);padding:10px}
+.stat-card small{display:block;color:var(--muted);text-transform:uppercase;font-size:13px;letter-spacing:1px}
+.stat-card strong{display:block;font-size:11px;margin-top:4px;font-family:'Press Start 2P',monospace;line-height:1.5}
+.grade{font-size:28px!important;color:var(--green)}
+.hidden{display:none!important}
+.footnote{font-size:14px;color:var(--muted);text-align:center;margin:10px 0 0;line-height:1.4}
+@media(max-width:900px){.topbar{align-items:flex-start;flex-direction:column}.hud{justify-content:flex-start;width:100%}.metric:first-child{border-left:0;padding-left:0}.layout{grid-template-columns:1fr 1fr}.radar-panel{grid-column:1/-1;grid-row:1}.side-stack{grid-row:2}.bottom-row{grid-template-columns:1fr 1fr}.bottom-row .mini-panel:last-child{grid-column:1/-1}}
+@media(max-width:560px){main{padding:10px}.layout{grid-template-columns:1fr}.radar-panel{grid-column:auto;grid-row:auto}.side-stack{grid-row:auto}.hud{gap:10px}.metric{padding-left:9px;min-width:70px}.metric strong{font-size:16px}.brand{min-width:0}.bottom-row{grid-template-columns:1fr}.bottom-row .mini-panel:last-child{grid-column:auto}.type-row{flex-direction:column}.type-row button{padding:12px}.flight{font-size:13px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="logo">✈</div><div><h1>SKY GUARDIAN</h1><p>KEEP THE SKIES SAFE. REDUCE EMISSIONS.</p></div></div>
+  <div class="hud">
+    <div class="metric"><small>Shift</small><strong id="shiftHud" class="blue">01 / 05</strong></div>
+    <div class="metric"><small>Round</small><strong id="roundHud" class="blue">01 / 10</strong></div>
+    <div class="metric"><small>Time left</small><strong id="timeHud">00:24</strong></div>
+    <div class="metric"><small>Emissions saved</small><strong id="savedHud" class="green">0 kg</strong></div>
+    <div class="metric"><small>Airport credits</small><strong id="creditsHud" class="amber">UR 500</strong></div>
+  </div>
+</header>
+<main>
+  <section class="layout">
+    <div class="side-stack">
+      <section class="panel">
+        <div class="panel-head"><h2><span class="symbol">↗</span>Departures / Takeoff</h2><span class="count" id="departureCount">3</span></div>
+        <div class="queue" id="departures"></div>
+        <div class="runways">
+          <div class="panel-head" style="padding:8px 0 6px"><h2><span class="symbol">╱</span>Runways open</h2><span class="count" id="leftRunwayCount">2</span></div>
+          <div id="leftRunways"></div>
+        </div>
+      </section>
+      <section class="panel mini-panel">
+        <h3>⌁ Controller notes</h3>
+        <p>Watch the radar for conflict alerts. Type the exact instruction shown in the command console before the countdown ends.</p>
+        <div class="round-dots" id="roundDots"></div>
+      </section>
+    </div>
+    <section class="panel radar-panel">
+      <div class="radar-title"><h2>◉ AIRSPACE RADAR</h2><span id="radarStatus">● SCANNING</span></div>
+      <div class="radar" id="radar">
+        <div class="cross x"></div><div class="cross y"></div>
+        <span class="radar-label north">N</span><span class="radar-label east">E</span><span class="radar-label south">S</span><span class="radar-label west">W</span>
+        <div class="plane a" id="planeA">✈</div><div class="plane b" id="planeB">✈</div>
+        <span class="plane-label label-a" id="labelA">AC214</span><span class="plane-label label-b" id="labelB">JT809</span>
+        <div class="collision-ring" id="collisionRing">!</div>
+      </div>
+      <p class="radar-caption" id="radarCaption">AIRSPACE CLEARANCE • MONITOR ALL FLIGHT PATHS</p>
+      <div style="width:100%;display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:13px;color:var(--muted)"><span>SECTOR: NORTH ATLANTIC</span><span>RADAR LINK: ACTIVE</span></div>
+    </section>
+    <div class="side-stack">
+      <section class="panel">
+        <div class="panel-head"><h2><span class="symbol">↙</span>Arrivals / Landing</h2><span class="count" id="arrivalCount">2</span></div>
+        <div class="queue" id="arrivals"></div>
+        <div class="runways">
+          <div class="panel-head" style="padding:8px 0 6px"><h2><span class="symbol">╱</span>Runways open</h2><span class="count" id="rightRunwayCount">2</span></div>
+          <div id="rightRunways"></div>
+        </div>
+      </section>
+      <section class="panel mini-panel">
+        <h3>♧ Sustainability</h3>
+        <p>Accurate, fast decisions reduce simulated holding time and fuel burn. Missed commands raise emissions and risk a shutdown.</p>
+        <div class="upgrade-line"><span style="font-size:14px;color:var(--muted)">Efficiency level <b id="upgradeLevel" class="green">1</b><span style="font-size:12px"> /15</span></span><button id="upgradeBtn">UPGRADE · UR 150</button></div>
+      </section>
+    </div>
+  </section>
+  <section class="command-panel">
+    <div class="command-head"><h2>⌨ COMMAND CONSOLE</h2><span class="tag" id="difficultyTag">TRAFFIC: MODERATE</span></div>
+    <div class="command-box">
+      <div class="prompt-label" id="promptLabel">Transmit this instruction exactly</div>
+      <div class="prompt" id="prompt">Pilot of <span class="flight-id">AC214</span>, turn left 10 degrees.</div>
+      <div class="type-row"><button id="playBtn" class="play hidden">▶ PLAY</button><input id="commandInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type command here…" aria-label="Type the exact air traffic control command"/><button id="sendBtn">TRANSMIT ↗</button></div>
+      <div class="progress-wrap"><div class="progress" id="timeBar"></div></div>
+      <div class="feedback" id="feedback" aria-live="polite">Controller ready. Type the instruction and press Enter.</div>
+    </div>
+  </section>
+  <section class="bottom-row">
+    <div class="panel mini-panel"><h3>✦ Performance</h3><p id="performanceText">Commands completed: 0<br>Accuracy: —<br>Average response: —</p></div>
+    <div class="panel mini-panel"><h3>◉ Airport economy</h3><p id="economyText">Credits are earned for safe, accurate commands. Upgrade your control systems to improve efficiency.</p></div>
+    <div class="panel mini-panel"><h3>♧ Climate objective</h3><p>Goal: complete 5 shifts of 10 rounds with safe separation, quick responses, and lower CO₂ emissions. Model: two 737-class aircraft; each game second represents one simulated flight minute.</p></div>
+  </section>
+  <p class="footnote">RETRO FLIGHT SYSTEMS // Emissions are estimates: 737-class cruise fuel burn assumed at 2,400 kg/hour, multiplied by ICAO's 3.16 kg CO₂/kg jet-fuel factor. Each real gameplay second represents one simulated flight minute; two aircraft are counted. Actual emissions vary by aircraft, flight phase, payload, weather and route.</p>
+</main>
+
+<div class="overlay" id="startOverlay">
+  <div class="modal">
+    <div class="eyebrow">Air traffic control simulation · 01</div>
+    <h2>GUARD THE SKY.</h2>
+    <p>You're the air traffic controller at a busy, sustainability-focused airport. Keep aircraft separated, clear arrivals and departures, and make every second count.</p>
+    <ul>
+      <li>Complete <b>10 rounds</b> per shift, across <b>5 shifts</b> — <b>case doesn't matter</b>.</li>
+      <li>After START, press <b>▶ PLAY</b> to begin each shift. Upgrade your systems first if you like.</li>
+      <li>On the radar, the two aircraft close in every round. Type the command before they collide.</li>
+      <li>You get <b>2 warnings per shift</b>. Two collisions ends the shift early — credits and upgrades carry over.</li>
+      <li>Upgrades cap at <b>level 15</b>. After shift 5, <b>clock out</b> to see your overall report.</li>
+    </ul>
+    <button class="primary" id="startBtn">START CONTROL SHIFT →</button>
+  </div>
+</div>
+<div class="overlay hidden" id="shiftOverlay">
+  <div class="modal">
+    <div class="eyebrow" id="shiftEyebrow">Shift 1 of 5 complete</div>
+    <h2 id="shiftTitle">SHIFT REPORT.</h2>
+    <p id="shiftMessage">Here's how your shift went.</p>
+    <div class="stats-grid">
+      <div class="stat-card"><small>Shift grade</small><strong class="grade" id="shiftGrade">B</strong></div>
+      <div class="stat-card"><small>Rounds completed</small><strong id="shiftRounds">10 / 10</strong></div>
+      <div class="stat-card"><small>Shift accuracy</small><strong id="shiftAccuracy">95%</strong></div>
+      <div class="stat-card"><small>Avg response</small><strong id="shiftResponse">2.1s</strong></div>
+      <div class="stat-card"><small>CO₂ emitted this shift</small><strong id="shiftEmissions" class="amber">— kg</strong></div>
+      <div class="stat-card"><small>CO₂ saved this shift</small><strong id="shiftSaved" class="green">— kg</strong></div>
+      <div class="stat-card"><small>Credits</small><strong id="shiftCredits">UR 500 → 700</strong></div>
+      <div class="stat-card"><small>Upgrade level</small><strong id="shiftUpgrade">Lv 1 / 15</strong></div>
+    </div>
+    <p id="shiftNote"></p>
+    <button class="primary" id="nextShiftBtn">START SHIFT 2 →</button>
+  </div>
+</div>
+<div class="overlay hidden" id="endOverlay">
+  <div class="modal">
+    <div class="eyebrow" id="endEyebrow">Session complete</div>
+    <h2 id="endTitle">CLOCKED OUT.</h2>
+    <p id="endMessage">Your overall report is ready.</p>
+    <div class="stats-grid">
+      <div class="stat-card"><small>Overall grade</small><strong class="grade" id="finalGrade">A</strong></div>
+      <div class="stat-card"><small>Shifts cleared</small><strong id="finalRounds">5 / 5</strong></div>
+      <div class="stat-card"><small>Overall accuracy</small><strong id="finalAccuracy">100%</strong></div>
+      <div class="stat-card"><small>Average response</small><strong id="finalResponse">2.4s</strong></div>
+      <div class="stat-card"><small>Estimated CO₂ emitted</small><strong id="finalEmissions" class="amber">— kg</strong></div>
+      <div class="stat-card"><small>CO₂ saved</small><strong id="finalSaved" class="green">— kg</strong></div>
+      <div class="stat-card"><small>Credits earned</small><strong id="finalCredits">UR 0</strong></div>
+      <div class="stat-card"><small>Rounds cleared</small><strong id="finalCommands">0 / 50</strong></div>
+    </div>
+    <p id="environmentNote"></p>
+    <button class="primary" id="restartBtn">NEW SESSION ↻</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const flights = [
+    {id:"AC214",dest:"Toronto (YYZ)"},{id:"JT809",dest:"Vancouver (YVR)"},{id:"NW502",dest:"Montreal (YUL)"},
+    {id:"SK118",dest:"Calgary (YYC)"},{id:"PA673",dest:"Ottawa (YOW)"},{id:"QF390",dest:"Halifax (YHZ)"},
+    {id:"DL821",dest:"Boston (BOS)"},{id:"VX245",dest:"Chicago (ORD)"},{id:"TR612",dest:"New York (JFK)"}
+  ];
+  const commands = [
+    {make:id=>`Pilot of ${id}, turn left 10 degrees.`,kind:"separation"},
+    {make:id=>`Pilot of ${id}, turn right 15 degrees.`,kind:"separation"},
+    {make:id=>`Pilot of ${id}, climb to 35000 feet.`,kind:"separation"},
+    {make:id=>`Pilot of ${id}, descend to 28000 feet.`,kind:"separation"},
+    {make:id=>`Pilot of ${id}, maintain current heading.`,kind:"separation"},
+    {make:id=>`Pilot of ${id}, reduce speed to 210 knots.`,kind:"efficiency"},
+    {make:id=>`Pilot of ${id}, proceed to runway 09L.`,kind:"runway"},
+    {make:id=>`Pilot of ${id}, hold position for clearance.`,kind:"runway"},
+    {make:id=>`Pilot of ${id}, report when ready to land.`,kind:"landing"},
+    {make:id=>`Pilot of ${id}, follow the green approach lights.`,kind:"landing"},
+    {make:id=>`Pilot of ${id}, expedite your descent to 15000 feet.`,kind:"separation"},
+    {make:id=>`Pilot of ${id}, contact tower on 118.7.`,kind:"radio"},
+    {make:id=>`Pilot of ${id}, squawk ident and confirm altitude.`,kind:"radio"},
+    {make:id=>`Pilot of ${id}, intercept the localizer for runway 27R.`,kind:"landing"},
+    {make:id=>`Pilot of ${id}, circle the field and await clearance.`,kind:"holding"},
+    {make:id=>`Pilot of ${id}, confirm you have the traffic in sight.`,kind:"separation"},
+    {make:id=>`Pilot of ${id}, maintain 250 knots to the outer marker.`,kind:"efficiency"},
+    {make:id=>`Pilot of ${id}, expect vectors for a visual approach.`,kind:"landing"},
+    {make:id=>`Pilot of ${id}, advise when established on the ILS.`,kind:"landing"},
+    {make:id=>`Pilot of ${id}, reduce to final approach speed.`,kind:"landing"},
+    {make:id=>`Pilot of ${id}, hold short of runway 09L.`,kind:"runway"},
+    {make:id=>`Pilot of ${id}, cleared for takeoff runway 27R.`,kind:"runway"},
+    {make:id=>`Pilot of ${id}, fly heading 270 and climb 12000.`,kind:"separation"},
+    {make:id=>`Pilot of ${id}, report passing 20000 feet.`,kind:"separation"},
+    {make:id=>`Pilot of ${id}, turn 20 degrees left for spacing.`,kind:"separation"},
+    {make:id=>`Pilot of ${id}, slow to 180 knots for sequencing.`,kind:"efficiency"},
+    {make:id=>`Pilot of ${id}, cross runway 18 at your discretion.`,kind:"runway"},
+    {make:id=>`Pilot of ${id}, monitor guard frequency 121.5.`,kind:"radio"},
+    {make:id=>`Pilot of ${id}, confirm squawk code 4271.`,kind:"radio"},
+    {make:id=>`Pilot of ${id}, expect holding at waypoint ALPHA.`,kind:"holding"},
+    {make:id=>`Pilot of ${id}, begin turn to intercept final.`,kind:"landing"},
+    {make:id=>`Pilot of ${id}, runway 27R is clear to land.`,kind:"landing"}
+  ];
+  const FUEL_BURN_KG_PER_HOUR = 2400;
+  const JET_FUEL_CO2_FACTOR = 3.16;
+  const SIMULATED_MINUTES_PER_REAL_SECOND =
